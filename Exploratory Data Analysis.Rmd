@@ -1,0 +1,142 @@
+---
+title: "Exploratory Data Analysis"
+output: pdf_document
+date: '2022-06-03'
+---
+
+```{r}
+library(tidyverse)
+library(readr)
+```
+
+
+# I found this data on Kaggle and as a current student I was curious to see what different factors affected student performance and to what degree.
+
+```{r}
+Score=read_csv('Student Performance new.csv')
+Score
+```
+
+# The spaces in the column names makes it impossible to work with the data so let's write a function that replaces the spaces with periods.
+
+```{r}
+names(Score)<-str_replace_all(names(Score), c(" " = "." , "," = "" ))
+```
+
+```{r}
+Score
+```
+# Looks like the data is prepared and ready to go now.
+
+# Let's create some graphs to explore the data and see if we can find anything interesting.
+# It would make sense that parents with higher levels of education would emphasize the importance of education to their children and thus the children would perform better academically. Let's see if that holds true.
+
+```{r}
+ggplot(Score, aes(x=math.percentage, y=parental.level.of.education)) +
+  geom_point()
+```
+# Looks like the math scores are on average higher for those with parents with higher levels of education. Let's see if this holds true for the reading and writing scores as well.
+
+```{r}
+ggplot(Score, aes(x=reading.score.percentage, y=parental.level.of.education)) +
+  geom_point()
+```
+
+```{r}
+ggplot(Score, aes(x=writing.score.percentage, y=parental.level.of.education)) +
+  geom_point()
+```
+
+# So far this holds true. Lower levels of education have a wider range of test scores across all subjects. Now let's look at a graph which displays the distribution of math scores by parental levels of education and see what we can learn.
+
+```{r}
+ggplot(Score, aes(x=math.percentage, fill=parental.level.of.education)) +
+  geom_bar()
+```
+
+# The distribution of the test scores is slightly left skewed and approximately normal indicating that the average test score is a bit above 0.50. Looking at the distribution it looks like most people's parents highest level of education was either some college or an associates degree.
+
+# Let's perform a linear regression analysis to see which other variables would be of interest to investigate.
+
+```{r}
+lm1=lm(math.percentage~., data=Score)
+summary(lm1)
+```
+
+# Let's investigate the effect lunch programs and test preparation has on math scores as these 2 variables are significant because their p-values are extremely small. Let's drop all of the other variables and key in on these 2 variables.
+
+```{r}
+ggplot(Score, aes(x=math.percentage, y=test.preparation.course)) +
+  geom_point()
+```
+
+```{r}
+ggplot(Score, aes(x=math.percentage, y=lunch)) +
+  geom_point()
+```
+
+# The math scores for those with a standard lunch and test preparation course have a higher average and a tighter grouping indicating that our previous analysis was accurate. These 2 factors have a significant on test scores, even moreso than parental levels of education
+
+```{r}
+ggplot(Score, aes(x=math.percentage, fill=lunch)) +
+  geom_bar()
+```
+
+```{r}
+ggplot(Score, aes(x=math.percentage, fill=test.preparation.course)) +
+  geom_bar()
+```
+
+# Those with a standard lunch perform significantly better than those on a reduced lunch and make up a significantly large portion of the high math scores. Let's cross reference this finding with reading and writing scores to see if this holds true for those as well.
+
+```{r}
+ggplot(Score, aes(x=writing.score.percentage, fill=lunch)) +
+  geom_bar()
+```
+
+```{r}
+ggplot(Score, aes(x=reading.score.percentage, fill=lunch)) +
+  geom_bar()
+```
+
+# Yes this holds true across the reading and writing tests as well. When looking at the score distributions the vast majority of scores across all test subjects in the 90th percentile and above are achieved by the students on the standard lunch program. Correlation does not mean causation though and possible explantions include having greater access to academic resources due to wealthier parents, lower performance due to food instability, etc.
+
+# When looking at the score distributions the type of lunch program looks to have an even bigger impact than completing a test preparation course. We'll perform a simple linear regression analysis holding all other variables fixed to see what the score difference is.
+
+```{r}
+lm2=lm(math.percentage~test.preparation.course, data=Score)
+summary(lm2)
+```
+# Having completed a test preparation course results in a predicted score of about 0.70 while not completing the course results in a predicted score of 0.64.
+
+```{r}
+lm3=lm(math.percentage~lunch, data=Score)
+summary(lm3)
+```
+
+# Having a standard lunch results in a predicted score of about 0.70 as well but having a reduced fee lunch results in a predicted score of 0.48, significantly lower than the predicted score of not completing a test preparation course.
+
+# Conclusion
+
+# When looking at all of the variables the type of lunch has the most significant effect on predicted test scores. This is true for all test subjects. The type of lunch had a more pronounced effect than level of parental education, test preparation course completion, etc. The Vast majority of scores in the top percentile were filled by those with who were on a standard lunch program.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
